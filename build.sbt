@@ -95,3 +95,4 @@ scalafmtOnCompile := true
 // Coverage configurations
 coverageMinimum := 90
 coverageFailOnMinimum := true
+coverageExcludedFiles := ".*MigrationsPlugin.*"

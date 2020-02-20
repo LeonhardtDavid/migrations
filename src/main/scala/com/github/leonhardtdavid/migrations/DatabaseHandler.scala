@@ -12,8 +12,9 @@ import scala.collection.mutable.ListBuffer
   * @param url         Database url.
   * @param credentials Optional user and password.
   * @param table       Table name to persist migrations.
+  * @param logger      A sbt Logger instance.
   */
-class DatabaseHandler(url: String, credentials: Option[(String, String)], table: String) {
+class DatabaseHandler(url: String, credentials: Option[(String, String)], table: String)(implicit logger: Logger) {
 
   Class.forName("com.mysql.cj.jdbc.Driver")
   Class.forName("org.postgresql.Driver")
@@ -67,9 +68,8 @@ class DatabaseHandler(url: String, credentials: Option[(String, String)], table:
     *
     * @param migrations        The migrations to apply (ups and down in the correct order).
     * @param updatedMigrations The current migrations to update the database table.
-    * @param logger            An implicit logger.
     */
-  def applyMigrations(migrations: Seq[String], updatedMigrations: Seq[Migration])(implicit logger: Logger): Unit = {
+  def applyMigrations(migrations: Seq[String], updatedMigrations: Seq[Migration]): Unit = {
     migrations foreach { migration =>
       logger.info(s"Applying migration:\n$migration")
       this.connection.prepareStatement(migration).execute()
