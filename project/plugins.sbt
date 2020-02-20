@@ -9,3 +9,6 @@ addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.7")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 // Autoformat code
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.0")
+
+// Publishing
+addSbtPlugin("org.foundweekends" % "sbt-bintray" % "0.5.6")

@@ -6,7 +6,13 @@ name := "sbt-migrations"
 organization := "com.github.leonhardtdavid"
 scalaVersion := "2.12.10"
 
+description := "sbt plugin for Database Migrations"
+licenses += ("MIT license", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
+
 sbtPlugin := true
+publishMavenStyle := false
+bintrayRepository := "sbt-plugins"
+bintrayOrganization in bintray := None
 
 lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
