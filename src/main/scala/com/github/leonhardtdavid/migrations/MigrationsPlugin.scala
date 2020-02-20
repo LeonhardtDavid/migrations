@@ -2,7 +2,6 @@ package com.github.leonhardtdavid.migrations
 
 import java.io.File
 
-import com.typesafe.config.ConfigFactory
 import sbt.Keys._
 import sbt._
 import sbt.util.Logger
@@ -12,16 +11,6 @@ import sbt.util.Logger
   */
 object MigrationsPlugin extends AutoPlugin {
 
-  private lazy val config = ConfigFactory.load(
-    """sbt-migrations {
-      |
-      |  default {
-      |    url = "jdbc:mysql://root:root@localhost:3306/default"
-      |  }
-      |
-      |}""".stripMargin
-  )
-
   private val default = "default"
   private val up      = "UP_"
   private val down    = "DOWN_"
@@ -30,26 +19,24 @@ object MigrationsPlugin extends AutoPlugin {
     * Database configuration.
     *
     * Examples: {{{
-    * new DatabaseConfig()
-    *
-    * new DatabaseConfig(url = Some("jdbc:postgresql://admin:admin@localhost/someSchema"))
+    * new DatabaseConfig(url = "jdbc:postgresql://admin:admin@localhost/someSchema")
     *
     * new DatabaseConfig(
     *   id = "users-database",
-    *   url = Some("jdbc:mysql://localhost:3306/users"),
+    *   url = "jdbc:mysql://localhost:3306/users",
     *   user = Some("admin"),
     *   password = Some("1234")
     * )
     * }}}
     *
     * @param id       Database identifier in configurations, default is "default".
-    * @param url      Optional database url, usually starting with jdbc:{{driver}}:...
+    * @param url      Database url, usually starting with jdbc:{{driver}}:...
     * @param user     Optional database user.
     * @param password Optional database user password.
     */
   final class DatabaseConfig(
       val id: String = default,
-      val url: Option[String] = None,
+      val url: String,
       val user: Option[String] = None,
       val password: Option[String] = None) {
 
@@ -80,7 +67,6 @@ object MigrationsPlugin extends AutoPlugin {
   override val projectSettings = Seq(
     migrationsPath := ((Compile / resourceDirectory).value / "migrations").getAbsolutePath,
     migrationsTable := "app_migrations",
-    migrationsConfigs := Seq(new DatabaseConfig()),
     migratedb := migratedbTask.value
   )
 
@@ -116,18 +102,15 @@ object MigrationsPlugin extends AutoPlugin {
       migrationsTable: String,
       migrationsPath: String
     )(implicit logger: Logger
-    ): Seq[(DatabaseHandler, Seq[Migration])] = {
-    val mergedConfig = ConfigFactory.load().withFallback(this.config)
-
+    ): Seq[(DatabaseHandler, Seq[Migration])] =
     migrationsConfigs.zipWithIndex.map {
       case (dbConfig, index) =>
-        val dbUrl = dbConfig.url.getOrElse(mergedConfig.getString(s"sbt-migrations.${dbConfig.id}.url"))
         val maybeCredentials = for {
           user     <- dbConfig.user
           password <- dbConfig.password
         } yield user -> password
 
-        val handler = new DatabaseHandler(dbUrl, maybeCredentials, migrationsTable)
+        val handler = new DatabaseHandler(dbConfig.url, maybeCredentials, migrationsTable)
         handler.initializeDatabase()
 
         val migrationsDirectory = new File(migrationsPath + File.separator + dbConfig.id)
@@ -140,7 +123,6 @@ object MigrationsPlugin extends AutoPlugin {
 
         handler -> migrations
     }
-  }
 
   private def findMigrationsFiles(migrationsDirectory: File)(implicit logger: Logger): Seq[Migration] = {
     val (ups, downs) = migrationsDirectory
