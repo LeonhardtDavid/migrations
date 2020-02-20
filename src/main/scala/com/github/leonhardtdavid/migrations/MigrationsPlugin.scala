@@ -3,14 +3,24 @@ package com.github.leonhardtdavid.migrations
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
+import sbt.Keys._
 import sbt._
+import sbt.util.Logger
 
 /**
   * SBT auto plugin to handle database migrations.
   */
 object MigrationsPlugin extends AutoPlugin {
 
-  private lazy val config = ConfigFactory.load()
+  private lazy val config = ConfigFactory.load(
+    """sbt-migrations {
+      |
+      |  default {
+      |    url = "jdbc:mysql://root:root@localhost:3306/default"
+      |  }
+      |
+      |}""".stripMargin
+  )
 
   private val default = "default"
   private val up      = "UP_"
@@ -68,16 +78,24 @@ object MigrationsPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
   override val projectSettings = Seq(
-    migrationsPath := this.getClass.getClassLoader.getResource("migrations").toString,
+    migrationsPath := ((Compile / resourceDirectory).value / "migrations").getAbsolutePath,
     migrationsTable := "app_migrations",
     migrationsConfigs := Seq(new DatabaseConfig()),
     migratedb := migratedbTask.value
   )
 
   lazy val migratedbTask = Def.task[Unit] {
-    this.createConnectionAndListFiles(migrationsConfigs.value, migrationsTable.value, migrationsPath.value) map {
+    implicit val logger: Logger = streams.value.log
+
+    logger.info("Starting migration...")
+    logger.info(s"Taking files from ${migrationsPath.value}")
+
+    this.createConnectionAndListFiles(migrationsConfigs.value, migrationsTable.value, migrationsPath.value) foreach {
       case (dbHandler, migrations) =>
         val dbMigrations = dbHandler.retrieveMigrations
+
+        logger.info(s"Migrations for ${migrations.headOption.map(_.id).getOrElse("- Nothing to apply -")}")
+        logger.info(s"Migrations on disk: ${migrations.length} / Migrations on database: ${dbMigrations.length}")
 
         val migrationsToRun =
           if (migrations.length >= dbMigrations.length) {
@@ -89,46 +107,54 @@ object MigrationsPlugin extends AutoPlugin {
 
         dbHandler.applyMigrations(migrationsToRun, migrations)
     }
+
+    logger.info("Migration ended")
   }
 
   private def createConnectionAndListFiles(
       migrationsConfigs: Seq[DatabaseConfig],
       migrationsTable: String,
       migrationsPath: String
-    ): Seq[(DatabaseHandler, Seq[Migration])] =
-    migrationsConfigs.map { dbConfig =>
-      val dbUrl = dbConfig.url.getOrElse(this.config.getString(s"sbt-migrations.${dbConfig.id}.url"))
-      val maybeCredentials = for {
-        user     <- dbConfig.user
-        password <- dbConfig.password
-      } yield user -> password
+    )(implicit logger: Logger
+    ): Seq[(DatabaseHandler, Seq[Migration])] = {
+    val mergedConfig = ConfigFactory.load().withFallback(this.config)
 
-      val handler = new DatabaseHandler(dbUrl, maybeCredentials, migrationsTable)
-      handler.initializeDatabase()
+    migrationsConfigs.zipWithIndex.map {
+      case (dbConfig, index) =>
+        val dbUrl = dbConfig.url.getOrElse(mergedConfig.getString(s"sbt-migrations.${dbConfig.id}.url"))
+        val maybeCredentials = for {
+          user     <- dbConfig.user
+          password <- dbConfig.password
+        } yield user -> password
 
-      val migrationsDirectory = new File(migrationsPath + File.separator + dbConfig.id)
+        val handler = new DatabaseHandler(dbUrl, maybeCredentials, migrationsTable)
+        handler.initializeDatabase()
 
-      if (!migrationsDirectory.isDirectory) {
-        throw new MigrationException(s"$migrationsDirectory is not a directory")
-      }
+        val migrationsDirectory = new File(migrationsPath + File.separator + dbConfig.id)
 
-      val migrations = this.findMigrationsFiles(migrationsDirectory)
+        logger.info(s"Migration $index: ${migrationsDirectory.getAbsolutePath}")
 
-      handler -> migrations
+        if (!migrationsDirectory.isDirectory) throw new MigrationException(s"$migrationsDirectory is not a directory")
+
+        val migrations = this.findMigrationsFiles(migrationsDirectory)
+
+        handler -> migrations
     }
+  }
 
-  private def findMigrationsFiles(migrationsDirectory: File): Seq[Migration] = {
+  private def findMigrationsFiles(migrationsDirectory: File)(implicit logger: Logger): Seq[Migration] = {
     val (ups, downs) = migrationsDirectory
       .listFiles()
       .filter { file =>
         val name = file.getName.toUpperCase
+
+        logger.info(s"Found: $name | Is a file? ${file.isFile}")
+
         file.isFile && (name.startsWith(up) || name.startsWith(down))
       }
       .partition(_.name.startsWith(up))
 
-    if (ups.length != downs.length) {
-      throw new MigrationException("The number of UP files and DOWN files is different")
-    }
+    if (ups.length != downs.length) throw new MigrationException("The number of UP files and DOWN files is different")
 
     sort(ups, up).zipWithIndex zip sort(downs, down) map {
       case (((indexUp, up), index), (indexDown, down)) =>
@@ -156,7 +182,7 @@ object MigrationsPlugin extends AutoPlugin {
 
   private def file2String(file: File): String = {
     val source  = scala.io.Source.fromFile(file)
-    val content = source.getLines().mkString.trim
+    val content = source.getLines().mkString("\n").trim
 
     source.close()
 
@@ -177,6 +203,7 @@ object MigrationsPlugin extends AutoPlugin {
         downs ++ migrations.drop(id - 1).map(_.up)
       }
       .getOrElse(Nil)
+      .flatMap(_.split(';'))
 
   private def findMigrationIdFromWhereToApply(migrations: Seq[Migration], dbMigrations: Seq[Migration]): Option[Int] = {
     val maybeId = migrations

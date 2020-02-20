@@ -2,6 +2,8 @@ package com.github.leonhardtdavid.migrations
 
 import java.sql.DriverManager
 
+import sbt.util.Logger
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -12,6 +14,9 @@ import scala.collection.mutable.ListBuffer
   * @param table       Table name to persist migrations.
   */
 class DatabaseHandler(url: String, credentials: Option[(String, String)], table: String) {
+
+  Class.forName("com.mysql.cj.jdbc.Driver")
+  Class.forName("org.postgresql.Driver")
 
   private val connection = credentials.fold(
     DriverManager.getConnection(url)
@@ -37,8 +42,9 @@ class DatabaseHandler(url: String, credentials: Option[(String, String)], table:
       .execute()
 
   /**
-    * asdfasdf
-    * @return asdfasdf
+    * Retrieve migrations from database.
+    *
+    * @return A sequence of migrations.
     */
   def retrieveMigrations: Seq[Migration] = {
     val buffer    = ListBuffer.empty[Migration]
@@ -61,11 +67,15 @@ class DatabaseHandler(url: String, credentials: Option[(String, String)], table:
     *
     * @param migrations        The migrations to apply (ups and down in the correct order).
     * @param updatedMigrations The current migrations to update the database table.
+    * @param logger            An implicit logger.
     */
-  def applyMigrations(migrations: Seq[String], updatedMigrations: Seq[Migration]): Unit = {
+  def applyMigrations(migrations: Seq[String], updatedMigrations: Seq[Migration])(implicit logger: Logger): Unit = {
     migrations foreach { migration =>
+      logger.info(s"Applying migration:\n$migration")
       this.connection.prepareStatement(migration).execute()
     }
+
+    logger.info("Updating migrations table")
 
     this.connection.prepareStatement(s"TRUNCATE TABLE $table;").execute()
 

@@ -12,11 +12,10 @@ lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
 
 libraryDependencies ++= Seq(
-  "commons-codec" % "commons-codec" % "1.14"
+  "commons-codec" % "commons-codec" % "1.14",
   // Database drivers
-//  "mysql"                   % "mysql-connector-java" % "8.0.17",
-//  "org.postgresql"          % "postgresql"           % "42.2.6",
-//  "com.microsoft.sqlserver" % "mssql-jdbc"           % "8.2.0.jre8"
+  "mysql"                   % "mysql-connector-java" % "8.0.17",
+  "org.postgresql"          % "postgresql"           % "42.2.6"
 )
 
 scalacOptions ++= Seq(
