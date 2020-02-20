@@ -7,7 +7,7 @@ organization := "com.github.leonhardtdavid"
 scalaVersion := "2.12.10"
 
 description := "sbt plugin for Database Migrations"
-licenses += ("MIT license", url("https://www.apache.org/licenses/LICENSE-2.0.html"))
+licenses += ("MIT license", url("https://david-leonhardt.mit-license.org/"))
 
 sbtPlugin := true
 publishMavenStyle := false
