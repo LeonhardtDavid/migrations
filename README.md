@@ -36,7 +36,7 @@ addSbtPlugin("com.github.leonhardtdavid" % "sbt-migrations" % "0.1.1")
 ### Settings
 
 | Setting | Type  | Default | Description |
-| ------- | :---: | :-----: | :---------: |
+| ------- | :---: | :-----: | ----------- |
 | migrationsPath | String | {resourceDirectory}/migrations | Directory where the migrations are going to be. |
 | migrationsTable | String | app_migrations | Table name to keep track of the applied migrations. |
 | migrationsConfigs | Seq | -- | No default, so it is required. List of database configurations. Usually it has only one config, but if you have more than one database, you can set multiple configurations. |
