@@ -108,4 +108,4 @@ The nomenclature of the files are as follow:
 2. Apply scripts must start with "UP_" (the plugin is case sensitive, so it should be in upper case), followed by the version number, followed by `.sql` **.
 3. Rollback script must start with "DOWN_" (the plugin is case sensitive, so it should be in upper case), followed by the version number, followed by `.sql` **.
 
-** Technically, I could be a dot and what you want, like, `.txt`, `.#%%&.sql`, etc., but I recommend to be `.sql`.
+** Technically, It could be a dot and what you want, like, `.txt`, `.#%%&.sql`, etc., but I recommend to be `.sql`.
