@@ -26,6 +26,11 @@ class MigrationHandler(implicit logger: Logger) {
     logger.info("Starting migration...")
     logger.info(s"Taking files from $migrationsPath")
 
+    val ids = migrationsConfigs.map(_.id)
+    if (ids.toSet.size != ids.size) {
+      throw new MigrationException("Configurations ids must be unique")
+    }
+
     this.createConnectionAndListFiles(migrationsConfigs, migrationsTable, migrationsPath) foreach {
       case (dbHandler, migrations) =>
         val dbMigrations = dbHandler.retrieveMigrations
