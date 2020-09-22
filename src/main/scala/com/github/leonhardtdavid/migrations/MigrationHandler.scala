@@ -73,7 +73,9 @@ class MigrationHandler(implicit logger: Logger) {
 
         if (!migrationsDirectory.isDirectory) throw new MigrationException(s"$migrationsDirectory is not a directory")
 
-        val migrations = this.findMigrationsFiles(migrationsDirectory)
+        val migrations =
+          if (dbConfig.files.isEmpty) this.findMigrationsFiles(migrationsDirectory)
+          else this.migrationsFromList(migrationsDirectory, dbConfig.files)
 
         handler -> migrations
     }
@@ -105,6 +107,16 @@ class MigrationHandler(implicit logger: Logger) {
         new Migration(indexUp, this.file2String(up), this.file2String(down))
     }
   }
+
+  private def migrationsFromList(migrationsDirectory: File, files: Seq[(String, String)]): Seq[Migration] =
+    files.zipWithIndex.map {
+      case ((upFileName, downFileName), index) =>
+        new Migration(
+          index + 1,
+          this.file2String(new File(migrationsDirectory, upFileName)),
+          this.file2String(new File(migrationsDirectory, downFileName))
+        )
+    }
 
   private def sort(array: Array[File], prefix: String) =
     array

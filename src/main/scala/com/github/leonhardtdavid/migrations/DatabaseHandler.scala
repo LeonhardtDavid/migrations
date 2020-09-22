@@ -5,6 +5,7 @@ import java.sql.DriverManager
 import sbt.util.Logger
 
 import scala.collection.mutable.ListBuffer
+import scala.util.Try
 
 /**
   * Database connections handler for migrations.
@@ -16,8 +17,9 @@ import scala.collection.mutable.ListBuffer
   */
 class DatabaseHandler(url: String, credentials: Option[(String, String)], table: String)(implicit logger: Logger) {
 
-  Class.forName("com.mysql.cj.jdbc.Driver")
-  Class.forName("org.postgresql.Driver")
+  List("com.mysql.cj.jdbc.Driver", "org.postgresql.Driver") foreach { driver =>
+    Try(Class.forName(driver))
+  }
 
   private val connection = credentials.fold(
     DriverManager.getConnection(url)

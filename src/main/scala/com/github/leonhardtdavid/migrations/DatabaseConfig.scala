@@ -18,12 +18,14 @@ package com.github.leonhardtdavid.migrations
   * @param url      Database url, usually starting with jdbc:{{driver}}:...
   * @param user     Optional database user.
   * @param password Optional database user password.
+  * @param files    A list of ups and downs files to apply migrations instead of default configuration.
   */
 final class DatabaseConfig(
     val id: String = "default",
     val url: String,
     val user: Option[String] = None,
-    val password: Option[String] = None) {
+    val password: Option[String] = None,
+    val files: Seq[(String, String)] = Nil) {
 
   require(
     user.isDefined && password.isDefined || user.isEmpty && password.isEmpty,

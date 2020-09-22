@@ -31,6 +31,13 @@ This is an auto plugin and you need to add the following to your `project/plugin
 addSbtPlugin("com.github.leonhardtdavid" % "sbt-migrations" % "0.1.1")
 ```
 
+You also need to add the dependency to the JDBC driver in the same file as the plugin.  
+For example, for Postgresql:
+
+```sbt
+libraryDependencies += "org.postgresql" % "postgresql" % "42.2.6"
+```
+
 ## Plugin configurations
 
 ### Settings
@@ -83,6 +90,8 @@ migrationsConfigs := Seq(
 
 ## Setting up the migrations
 
+### Default migration files structure
+
 Inside the directory configured in migrationsPath (usually `src/main/resources/migrations`, or `conf/migrations` in [Play!](https://www.playframework.com/) proyects, or the value you set),
 you must create a subfolder that has to be named as the configuration id. So, if I have the default id, I am going to create the following directory: `src/main/resources/migrations/default`,
 instead, if I set the id `animals_database`, I am going to create the following directory: `src/main/resources/migrations/animals_database`.
@@ -101,11 +110,35 @@ The nomenclature of the files are as follow:
   - ....
   - DOWN_n.sql
 
-### Required things you need to know:
+#### Required things you need to know:
 
 1. The versions must start from 1.
 1. The versions numbers must be consecutive and positive integers (1, 2, 3, 4, ..., n).
-2. Apply scripts must start with "UP_" (the plugin is case sensitive, so it should be in upper case), followed by the version number, followed by `.sql` **.
-3. Rollback script must start with "DOWN_" (the plugin is case sensitive, so it should be in upper case), followed by the version number, followed by `.sql` **.
+1. Apply scripts must start with "UP_" (it could also be in lower case), followed by the version number, followed by `.sql` **.
+1. Rollback script must start with "DOWN_"(it could also be in lower case), followed by the version number, followed by `.sql` **.
 
-** Technically, It could be a dot and what you want, like, `.txt`, `.#%%&.sql`, etc., but I recommend to be `.sql`.
+** Technically, It could be a dot and what you want, like, `.txt`, `.#%%&.sql`, etc., but the recommended extension is `.sql`.
+
+### Custom migration files
+
+Inside the directory configured in migrationsPath (usually `src/main/resources/migrations`, or `conf/migrations` in [Play!](https://www.playframework.com/) proyects, or the value you set),
+you must create a subfolder that has to be named as the configuration id. So, if I have the default id, I am going to create the following directory: `src/main/resources/migrations/default`,
+instead, if I set the id `animals_database`, I am going to create the following directory: `src/main/resources/migrations/animals_database`.
+
+Now, the difference with the default structure is that you can define in the configuration a list of tuples, with the form (up_file, down_file), having the names you prefer.
+
+For example:
+
+```scala
+migrationsConfigs := Seq(
+  new DatabaseConfig(
+    url = "jdbc:postgresql://localhost/some_schema",
+    user = Some("some_user"),
+    password = Some("some_password"),
+    files = Seq(
+      "100 Init database.sql" -> "100 Init database ROLLBACK.sql",
+      "200 new table.sql" -> "200 new table ROLLBACK.sql"
+    )
+  )
+)
+```
