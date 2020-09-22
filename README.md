@@ -28,7 +28,7 @@ It is built for SBT 1.x, not working (for the moment) on version 0.13.
 This is an auto plugin and you need to add the following to your `project/plugins.sbt`:
 
 ```sbt
-addSbtPlugin("com.github.leonhardtdavid" % "sbt-migrations" % "0.1.1")
+addSbtPlugin("com.github.leonhardtdavid" % "sbt-migrations" % "0.1.2")
 ```
 
 You also need to add the dependency to the JDBC driver in the same file as the plugin.  
