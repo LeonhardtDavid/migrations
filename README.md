@@ -35,18 +35,18 @@ You also need to add the dependency to the JDBC driver in the same file as the p
 For example, for Postgresql:
 
 ```sbt
-libraryDependencies += "org.postgresql" % "postgresql" % "42.2.6"
+libraryDependencies += "org.postgresql" % "postgresql" % "42.3.3"
 ```
 
 ## Plugin configurations
 
 ### Settings
 
-| Setting | Type  | Default | Description |
-| ------- | :---: | :-----: | ----------- |
-| migrationsPath | String | {resourceDirectory}/migrations | Directory where the migrations are going to be. |
-| migrationsTable | String | app_migrations | Table name to keep track of the applied migrations. |
-| migrationsConfigs | Seq | -- | No default, so it is required. List of database configurations. Usually it has only one config, but if you have more than one database, you can set multiple configurations. |
+| Setting           |  Type  |            Default             | Description                                                                                                                                                                  |
+|-------------------|:------:|:------------------------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| migrationsPath    | String | {resourceDirectory}/migrations | Directory where the migrations are going to be.                                                                                                                              |
+| migrationsTable   | String |         app_migrations         | Table name to keep track of the applied migrations.                                                                                                                          |
+| migrationsConfigs |  Seq   |               --               | No default, so it is required. List of database configurations. Usually it has only one config, but if you have more than one database, you can set multiple configurations. |
 
 NOTE:  
 Each value of migrationsConfigs has an id, the default value is "default". This ids must be unique.

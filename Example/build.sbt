@@ -2,7 +2,7 @@ import com.github.leonhardtdavid.migrations.DatabaseConfig
 
 name := "migrations-example"
 organization := "com.github.leonhardtdavid"
-scalaVersion := "2.12.12"
+scalaVersion := "3.1.1"
 
 lazy val root = project in file(".")
 

@@ -1,5 +1,3 @@
 package com.github.leonhardtdavid.migrations
 
-class DatabaseConfigSpec {
-
-}
+class DatabaseConfigSpec {}

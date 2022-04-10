@@ -1,14 +1,15 @@
 package com.github.leonhardtdavid.migrations
 
-import java.io.File
-
 import sbt._
 import sbt.util.Logger
+
+import java.io.File
 
 /**
   * Migrations handler.
   *
-  * @param logger A sbt Logger instance.
+  * @param logger
+  *   A sbt Logger instance.
   */
 class MigrationHandler(implicit logger: Logger) {
 
@@ -18,18 +19,18 @@ class MigrationHandler(implicit logger: Logger) {
   /**
     * Run the migrations with the given parameters.
     *
-    * @param migrationsPath    Path to migrations files.
-    * @param migrationsConfigs Database configurations.
-    * @param migrationsTable   Table name for migrations.
+    * @param migrationsPath
+    *   Path to migrations files.
+    * @param migrationsConfigs
+    *   Database configurations.
+    * @param migrationsTable
+    *   Table name for migrations.
     */
   def execute(migrationsPath: String, migrationsConfigs: Seq[DatabaseConfig], migrationsTable: String): Unit = {
     logger.info("Starting migration...")
     logger.info(s"Taking files from $migrationsPath")
 
-    val ids = migrationsConfigs.map(_.id)
-    if (ids.toSet.size != ids.size) {
-      throw new MigrationException("Configurations ids must be unique")
-    }
+    this.validate(migrationsConfigs)
 
     this.createConnectionAndListFiles(migrationsConfigs, migrationsTable, migrationsPath) foreach {
       case (dbHandler, migrations) =>
@@ -52,11 +53,25 @@ class MigrationHandler(implicit logger: Logger) {
     logger.info("Migration ended")
   }
 
+  private def validate(migrationsConfigs: Seq[DatabaseConfig]): Unit = {
+    migrationsConfigs.zipWithIndex.foreach {
+      case (config, index) =>
+        if (config.user.isDefined && config.password.isDefined || config.user.isEmpty && config.password.isEmpty) {
+          throw new MigrationException(s"You must set user and password or leave both empty - On index $index")
+        }
+    }
+
+    val ids = migrationsConfigs.map(_.id)
+    if (ids.toSet.size != ids.size) {
+      throw new MigrationException("Configuration ids must be unique")
+    }
+  }
+
   private def createConnectionAndListFiles(
       migrationsConfigs: Seq[DatabaseConfig],
       migrationsTable: String,
       migrationsPath: String
-    ): Seq[(DatabaseHandler, Seq[Migration])] =
+  ): Seq[(DatabaseHandler, Seq[Migration])] =
     migrationsConfigs.zipWithIndex.map {
       case (dbConfig, index) =>
         val maybeCredentials = for {

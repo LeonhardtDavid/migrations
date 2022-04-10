@@ -10,10 +10,14 @@ import scala.util.Try
 /**
   * Database connections handler for migrations.
   *
-  * @param url         Database url.
-  * @param credentials Optional user and password.
-  * @param table       Table name to persist migrations.
-  * @param logger      A sbt Logger instance.
+  * @param url
+  *   Database url.
+  * @param credentials
+  *   Optional user and password.
+  * @param table
+  *   Table name to persist migrations.
+  * @param logger
+  *   A sbt Logger instance.
   */
 class DatabaseHandler(url: String, credentials: Option[(String, String)], table: String)(implicit logger: Logger) {
 
@@ -47,20 +51,20 @@ class DatabaseHandler(url: String, credentials: Option[(String, String)], table:
   /**
     * Retrieve migrations from database.
     *
-    * @return A sequence of migrations.
+    * @return
+    *   A sequence of migrations.
     */
   def retrieveMigrations: Seq[Migration] = {
     val buffer    = ListBuffer.empty[Migration]
     val resultSet = this.connection.prepareStatement(s"SELECT * FROM $table ORDER BY id ASC;").executeQuery()
 
-    while (resultSet.next()) {
+    while (resultSet.next())
       buffer += new Migration(
         resultSet.getInt("id"),
         resultSet.getString("up"),
         resultSet.getString("down"),
         resultSet.getString("hash")
       )
-    }
 
     buffer
   }
@@ -68,8 +72,10 @@ class DatabaseHandler(url: String, credentials: Option[(String, String)], table:
   /**
     * Updates the database running the migrations.
     *
-    * @param migrations        The migrations to apply (ups and down in the correct order).
-    * @param updatedMigrations The current migrations to update the database table.
+    * @param migrations
+    *   The migrations to apply (ups and down in the correct order).
+    * @param updatedMigrations
+    *   The current migrations to update the database table.
     */
   def applyMigrations(migrations: Seq[String], updatedMigrations: Seq[Migration]): Unit = {
     migrations foreach { migration =>

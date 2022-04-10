@@ -17,7 +17,7 @@ object MigrationsPlugin extends AutoPlugin {
     val migrationsTable   = settingKey[String]("Table name for migrations")
     val migrationsConfigs = settingKey[Seq[DatabaseConfig]]("Database configurations")
 
-    val migratedb = taskKey[Unit]("Apply migrations in database")
+    val migratedb = taskKey[Unit]("Apply migrations in the database")
   }
 
   import autoImport._
@@ -27,9 +27,9 @@ object MigrationsPlugin extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
   override val projectSettings = Seq(
-    migrationsPath := ((Compile / resourceDirectory).value / "migrations").getAbsolutePath,
+    migrationsPath  := ((Compile / resourceDirectory).value / "migrations").getAbsolutePath,
     migrationsTable := "app_migrations",
-    migratedb := migratedbTask.value
+    migratedb       := migratedbTask.value
   )
 
   lazy val migratedbTask = Def.task[Unit] {

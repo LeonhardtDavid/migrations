@@ -34,8 +34,10 @@ RUNNING_PID
 .idea
 *.iml
 .idea_modules
+.bsp
 
 # VS Code specific
+.vscode
 .metals
 .bloop
 

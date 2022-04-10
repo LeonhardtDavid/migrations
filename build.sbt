@@ -4,7 +4,7 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 
 name := "sbt-migrations"
 organization := "com.github.leonhardtdavid"
-scalaVersion := "2.12.10"
+scalaVersion := "2.12.15"
 
 description := "sbt plugin for Database Migrations"
 licenses += ("MIT license", url("https://david-leonhardt.mit-license.org/"))
@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
   .enablePlugins(SbtPlugin)
 
 libraryDependencies ++= Seq(
-  "commons-codec" % "commons-codec" % "1.14"
+  "commons-codec" % "commons-codec" % "1.15"
 )
 
 scalacOptions ++= Seq(
@@ -87,15 +87,10 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 // updateOptions := updateOptions.value.withGigahorse(false)
 
-// Run checkstyle before compile
-lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
-compileScalastyle := scalastyle.in(Compile).toTask("").value
-(compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value
-
 // Autoformat code configurations
 scalafmtOnCompile := true
 
 // Coverage configurations
-coverageMinimum := 90
+coverageMinimumStmtTotal := 90
 coverageFailOnMinimum := true
 coverageExcludedFiles := ".*MigrationsPlugin.*"
